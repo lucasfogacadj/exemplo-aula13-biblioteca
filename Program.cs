@@ -82,6 +82,15 @@ app.MapDelete("/api/livros/{id:int}", async (int id, BibliotecaDbContext db) =>
     return Results.NoContent();
 });
 
+// Rota isolada para o smoke test da CI; não é registrada nos ambientes normais.
+if (app.Environment.IsEnvironment("SmokeTest"))
+{
+    app.MapGet("/api/teste-erro", () =>
+    {
+        throw new InvalidOperationException("Falha simulada para teste.");
+    });
+}
+
 app.Run();
 
 sealed class BibliotecaDbContext(DbContextOptions<BibliotecaDbContext> options)

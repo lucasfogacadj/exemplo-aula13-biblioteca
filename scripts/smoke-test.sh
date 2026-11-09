@@ -4,7 +4,7 @@ set -euo pipefail
 base_url="${BASE_URL:-http://127.0.0.1:5220}"
 db_file="${TMPDIR:-/tmp}/biblioteca-smoke-$RANDOM.db"
 log_file="${TMPDIR:-/tmp}/biblioteca-smoke-$RANDOM.log"
-ConnectionStrings__Biblioteca="Data Source=$db_file" dotnet run --no-build --configuration Release --urls "$base_url" >"$log_file" 2>&1 &
+ASPNETCORE_ENVIRONMENT=SmokeTest ConnectionStrings__Biblioteca="Data Source=$db_file" dotnet run --no-build --configuration Release --urls "$base_url" >"$log_file" 2>&1 &
 app_pid=$!
 cleanup() { kill "$app_pid" 2>/dev/null || true; wait "$app_pid" 2>/dev/null || true; rm -f "$db_file" "$db_file-shm" "$db_file-wal" "$log_file"; }
 trap cleanup EXIT
@@ -18,6 +18,13 @@ if [[ "$ready" != 1 ]]; then cat "$log_file"; echo "API did not become ready" >&
 
 initial="$(curl --silent --show-error "$base_url/api/livros")"
 [[ "$initial" == "[]" ]] || { echo "Expected an empty database, got: $initial" >&2; exit 1; }
+
+error_response="$(curl --silent --show-error "$base_url/api/teste-erro" -w '%{http_code}')"
+error_status="${error_response: -3}"
+error_body="${error_response:0:${#error_response}-3}"
+[[ "$error_status" == 500 ]] || { echo "Expected generic exception response 500, got $error_status: $error_body" >&2; exit 1; }
+[[ "$error_body" == *"Ocorreu um erro interno. Tente novamente mais tarde."* ]] || { echo "Generic exception message missing: $error_body" >&2; exit 1; }
+[[ "$error_body" != *"Falha simulada para teste."* ]] || { echo "Internal exception details leaked to the response" >&2; exit 1; }
 
 created="$(curl --silent --show-error -X POST "$base_url/api/livros" -H 'Content-Type: application/json' -d '{"titulo":"O Hobbit","autor":"J. R. R. Tolkien","anoPublicacao":1937}' -w '\n%{http_code}')"
 status="${created##*$'\n'}"
@@ -34,7 +41,7 @@ put_status="$(curl --silent --output /dev/null --write-out '%{http_code}' -X PUT
 restart_id="$(curl --silent --show-error -X POST "$base_url/api/livros" -H 'Content-Type: application/json' -d '{"titulo":"Dom Casmurro","autor":"Machado de Assis","anoPublicacao":1899}' | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')"
 kill "$app_pid" 2>/dev/null || true
 wait "$app_pid" 2>/dev/null || true
-ConnectionStrings__Biblioteca="Data Source=$db_file" dotnet run --no-build --configuration Release --urls "$base_url" >"$log_file" 2>&1 &
+ASPNETCORE_ENVIRONMENT=SmokeTest ConnectionStrings__Biblioteca="Data Source=$db_file" dotnet run --no-build --configuration Release --urls "$base_url" >"$log_file" 2>&1 &
 app_pid=$!
 ready=0
 for _ in $(seq 1 40); do

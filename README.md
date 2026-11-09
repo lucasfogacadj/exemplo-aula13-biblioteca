@@ -43,7 +43,7 @@ Exemplo de corpo para POST/PUT:
 
 `Program.cs` registra `UseExceptionHandler` depois de `builder.Build()` e antes dos arquivos estáticos e endpoints. O middleware devolve HTTP 500 e uma mensagem genérica em JSON; não envia detalhes internos ao cliente. A resposta 404 para um livro inexistente continua sendo um resultado esperado, separado de uma exceção.
 
-A rota temporária `/api/teste-erro` não é mantida no projeto. Para exercitar o handler durante a aula, adicione-a temporariamente, teste apenas localmente e remova-a antes de salvar o resultado.
+A rota `/api/teste-erro` existe somente no ambiente automatizado `SmokeTest`, para verificar que o handler devolve 500 genérico sem expor a exceção. Ela não é registrada nos ambientes usuais de desenvolvimento ou produção. Para praticar no seu projeto, acrescente uma rota temporária de teste localmente, remova-a ao terminar e nunca publique uma rota que lança exceção deliberadamente.
 
 ## Limites do exemplo
 
