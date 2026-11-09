@@ -35,11 +35,9 @@ Exemplo de corpo para POST/PUT:
 4. Cadastre outro livro, pare a aplicação e rode `dotnet run` novamente: o registro não excluído deve continuar na lista.
 5. Para testar a API sem a interface, envie GET/POST/PUT/DELETE para as rotas acima em Bruno, Postman ou `curl`.
 
-## Aula 13 — tratamento de exceções
+## Ponto de partida da Aula 13
 
-`Program.cs` registra `UseExceptionHandler` depois de `builder.Build()` e antes dos arquivos estáticos e endpoints. O middleware devolve HTTP 500 e uma mensagem genérica em JSON; não envia detalhes internos ao cliente. A resposta 404 para um livro inexistente continua sendo um resultado esperado, separado de uma exceção.
-
-A rota temporária `/api/teste-erro` não é mantida no projeto. Para exercitar o handler durante a aula, adicione-a temporariamente, teste apenas localmente e remova-a antes de salvar o resultado.
+Esta branch representa o projeto ao final da AP2: CRUD persistente com SQLite e interface integrada. O tratamento centralizado de exceções ainda não foi acrescentado. Na aula, implemente o middleware em `Program.cs` depois de `builder.Build()` e antes dos arquivos estáticos e endpoints; compare com a branch `main` para revisar a solução concluída.
 
 ## Limites do exemplo
 

@@ -8,20 +8,6 @@ builder.Services.AddDbContext<BibliotecaDbContext>(options =>
 
 var app = builder.Build();
 
-// Mantém a resposta pública genérica; detalhes técnicos não são enviados ao cliente.
-app.UseExceptionHandler(errorApp =>
-{
-    errorApp.Run(async context =>
-    {
-        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(new
-        {
-            mensagem = "Ocorreu um erro interno. Tente novamente mais tarde."
-        });
-    });
-});
-
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
