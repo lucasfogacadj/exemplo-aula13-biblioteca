@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Biblioteca — exemplo AP2</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; background: #f5f3fa; color: #211b2e; }
+    body { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #512bd4; }
+    form, li { background: white; border: 1px solid #ddd7eb; border-radius: 12px; padding: 1rem; }
+    form { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    label { display: grid; gap: .3rem; }
+    input, button { font: inherit; padding: .65rem; }
+    button { cursor: pointer; border: 0; border-radius: 8px; background: #512bd4; color: white; }
+    .actions { display: flex; gap: .5rem; align-items: end; }
+    .actions button:last-child { background: #6b6574; }
+    ul { padding: 0; display: grid; gap: .7rem; }
+    li { list-style: none; display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+    .error { color: #a11; min-height: 1.5em; }
+  </style>
+</head>
+<body>
+  <h1>Minha biblioteca</h1>
+  <p>Exemplo didático de interface integrada à API e ao SQLite. Os registros ficam salvos após reiniciar a aplicação.</p>
+  <form id="book-form">
+    <input id="book-id" type="hidden">
+    <label>Título <input id="title" required maxlength="120"></label>
+    <label>Autor <input id="author" required maxlength="120"></label>
+    <label>Ano <input id="year" type="number" required min="1" max="2100" value="2026"></label>
+    <div class="actions"><button type="submit">Salvar livro</button><button id="cancel" type="button">Limpar</button></div>
+  </form>
+  <p id="message" class="error" role="status" aria-live="polite"></p>
+  <h2>Livros cadastrados</h2>
+  <ul id="books"></ul>
+  <script>
+    const form = document.querySelector('#book-form');
+    const message = document.querySelector('#message');
+
+    async function loadBooks() {
+      const response = await fetch('/api/livros');
+      if (!response.ok) throw new Error(`Falha ao listar livros: HTTP ${response.status}`);
+      const books = await response.json();
+      const list = document.querySelector('#books');
+      list.replaceChildren();
+      for (const book of books) {
+        const item = document.createElement('li');
+        const details = document.createElement('span');
+        details.textContent = `${book.titulo} — ${book.autor} (${book.anoPublicacao})`;
+        const actions = document.createElement('span');
+        const edit = document.createElement('button');
+        edit.type = 'button'; edit.textContent = 'Editar';
+        edit.addEventListener('click', () => {
+          document.querySelector('#book-id').value = book.id;
+          document.querySelector('#title').value = book.titulo;
+          document.querySelector('#author').value = book.autor;
+          document.querySelector('#year').value = book.anoPublicacao;
+        });
+        const remove = document.createElement('button');
+        remove.type = 'button'; remove.textContent = 'Excluir';
+        remove.addEventListener('click', async () => {
+          const result = await fetch(`/api/livros/${book.id}`, { method: 'DELETE' });
+          if (!result.ok && result.status !== 204) { message.textContent = `Não foi possível excluir (HTTP ${result.status}).`; return; }
+          message.textContent = 'Livro excluído.';
+          await loadBooks();
+        });
+        actions.append(edit, remove); item.append(details, actions); list.append(item);
+      }
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault(); message.textContent = '';
+      const id = document.querySelector('#book-id').value;
+      const payload = {
+        titulo: document.querySelector('#title').value.trim(),
+        autor: document.querySelector('#author').value.trim(),
+        anoPublicacao: Number(document.querySelector('#year').value)
+      };
+      const response = await fetch(id ? `/api/livros/${id}` : '/api/livros', {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) { message.textContent = `A API não confirmou a operação (HTTP ${response.status}).`; return; }
+      message.textContent = id ? 'Livro atualizado.' : 'Livro cadastrado.';
+      form.reset(); document.querySelector('#book-id').value = '';
+      await loadBooks();
+    });
+
+    document.querySelector('#cancel').addEventListener('click', () => {
+      form.reset(); document.querySelector('#book-id').value = ''; message.textContent = '';
+    });
+    loadBooks().catch(error => { message.textContent = error.message; });
+  </script>
+</body>
+</html>
