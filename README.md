@@ -4,6 +4,10 @@ Projeto didático de uma API para livros, evoluído do CRUD da AP1 para persist�
 
 > Use este repositório para acompanhar a implementação em aula. Cada estudante deve aplicar a mesma ideia no próprio projeto, preservando o recurso e os campos escolhidos na AP1/AP2; não substitua seu projeto pelo exemplo de livros.
 
+## Repositório para a prática
+
+A branch [`ap2-base`](https://github.com/lucasfogacadj/exemplo-aula13-biblioteca/tree/ap2-base) é o ponto de partida com o CRUD da AP2, antes do middleware. A branch `main` contém a versão final da Aula 13. O fluxo de implementação da aula começa em `ap2-base`; compare com `main` somente depois de tentar.
+
 ## Requisitos e execução
 
 - .NET SDK 10
